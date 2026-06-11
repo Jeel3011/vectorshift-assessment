@@ -21,7 +21,7 @@ export const ApiCallNode = ({ id, data }) => {
       id={id}
       title="API Call"
       icon={ApiIcon}
-      accentColor="#ef4444"
+      
       handles={[
         { type: 'target', position: 'left', id: 'body', label: 'Body' },
         { type: 'source', position: 'right', id: 'response', label: 'Response' },

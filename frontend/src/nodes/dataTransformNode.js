@@ -12,7 +12,7 @@ export const DataTransformNode = ({ id, data }) => {
       id={id}
       title="Data Transform"
       icon={DataTransformIcon}
-      accentColor="#14b8a6"
+      
       handles={[
         { type: 'target', position: 'left', id: 'input', label: 'Data' },
         { type: 'source', position: 'right', id: 'output', label: 'Result' },

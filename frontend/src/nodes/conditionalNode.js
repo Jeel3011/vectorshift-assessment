@@ -12,7 +12,7 @@ export const ConditionalNode = ({ id, data }) => {
       id={id}
       title="Conditional"
       icon={ConditionalIcon}
-      accentColor="#f97316"
+      
       handles={[
         { type: 'target', position: 'left', id: 'input', label: 'Input' },
         { type: 'source', position: 'right', id: 'true', label: 'True' },

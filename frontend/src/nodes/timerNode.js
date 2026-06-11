@@ -20,7 +20,7 @@ export const TimerNode = ({ id, data }) => {
       id={id}
       title="Timer"
       icon={TimerIcon}
-      accentColor="#a855f7"
+      
       handles={[
         { type: 'target', position: 'left', id: 'trigger', label: 'Trigger' },
         { type: 'source', position: 'right', id: 'done', label: 'Done' },

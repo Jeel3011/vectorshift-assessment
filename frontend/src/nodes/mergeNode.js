@@ -11,7 +11,7 @@ export const MergeNode = ({ id, data }) => {
       id={id}
       title="Merge"
       icon={MergeIcon}
-      accentColor="#6366f1"
+      
       handles={[
         { type: 'target', position: 'left', id: 'input_1', label: 'Input 1' },
         { type: 'target', position: 'left', id: 'input_2', label: 'Input 2' },

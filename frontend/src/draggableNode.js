@@ -13,14 +13,10 @@ export const DraggableNode = ({ type, label, icon: IconComponent, accentColor })
       onDragStart={(event) => onDragStart(event, type)}
       onDragEnd={(event) => (event.target.style.cursor = 'grab')}
       draggable
-      style={accentColor ? { '--node-accent': accentColor } : undefined}
     >
       {IconComponent && (
-        <span
-          className="draggable-node-icon-wrap"
-          style={{ background: accentColor || '#54585F' }}
-        >
-          <IconComponent size={12} />
+        <span className="draggable-node-icon-wrap">
+          <IconComponent size={11} />
         </span>
       )}
       <span className="draggable-node-label">{label}</span>

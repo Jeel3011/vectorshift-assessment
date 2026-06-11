@@ -57,7 +57,7 @@ export const TextNode = ({ id, data }) => {
       id={id}
       title="Text"
       icon={TextIcon}
-      accentColor="#0ea5e9"
+      
       handles={[
         { type: 'source', position: 'right', id: 'output', label: 'Output' },
       ]}

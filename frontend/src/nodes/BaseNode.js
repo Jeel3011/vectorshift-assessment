@@ -14,7 +14,7 @@ export const BaseNode = ({
   id,
   title,
   icon: IconComponent,
-  accentColor = '#54585F',
+  accentColor = '#0a0a0a',
   handles = [],
   children,
   style = {},

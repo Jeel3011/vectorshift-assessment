@@ -15,7 +15,7 @@ export const InputNode = ({ id, data }) => {
       id={id}
       title="Input"
       icon={InputIcon}
-      accentColor="#22c55e"
+      
       handles={[{ type: 'source', position: 'right', id: 'value', label: 'Value' }]}
     >
       <TextField label="Name" value={currName} onChange={setCurrName} placeholder="input_name" />

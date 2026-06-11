@@ -72,7 +72,12 @@ export const PipelineToolbar = () => (
   <div className="pipeline-toolbar">
     <div className="toolbar-header">
       <div className="toolbar-logo">
-        <span className="toolbar-logo-dot" />
+        <span className="toolbar-logo-mark">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </span>
         Pipeline Builder
       </div>
       <span className="toolbar-subtitle">Drag nodes to canvas</span>

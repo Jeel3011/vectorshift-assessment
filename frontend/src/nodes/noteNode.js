@@ -20,7 +20,7 @@ export const NoteNode = ({ id, data }) => {
       id={id}
       title="Note"
       icon={NoteIcon}
-      accentColor="#eab308"
+      
       handles={[]}
       className="note-node"
       style={{ background: colorConfig.bg, borderColor: colorConfig.border }}

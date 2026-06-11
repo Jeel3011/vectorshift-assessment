@@ -20,7 +20,7 @@ export const ChatNode = ({ id, data }) => {
       id={id}
       title="Chat"
       icon={ChatIcon}
-      accentColor="#06b6d4"
+      
       handles={[
         { type: 'target', position: 'left', id: 'context', label: 'Context' },
         { type: 'target', position: 'left', id: 'history', label: 'History' },

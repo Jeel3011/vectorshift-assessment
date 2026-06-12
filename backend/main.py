@@ -85,8 +85,10 @@ def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
     in_degree: dict[str, int] = {nid: 0 for nid in node_ids}
 
     for edge in edges:
+        if edge.source not in node_ids or edge.target not in node_ids:
+            continue  # ignore dangling edges that reference unknown nodes
         adj[edge.source].append(edge.target)
-        in_degree[edge.target] = in_degree.get(edge.target, 0) + 1
+        in_degree[edge.target] += 1
 
     # Start with all zero-in-degree nodes
     queue: deque[str] = deque(

@@ -1,8 +1,9 @@
 // textNode.js
 // Dynamic resize + {{ variable }} handle detection.
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useStore } from '../store';
 import { BaseNode } from './BaseNode';
 import { TextIcon } from '../icons';
 
@@ -31,8 +32,8 @@ const measureTextWidth = (() => {
 })();
 
 export const TextNode = ({ id, data }) => {
+  const updateNodeField = useStore((s) => s.updateNodeField);
   const [currText, setCurrText] = useState(data?.text || '{{input}}');
-  const textareaRef = useRef(null);
   const [width, setWidth] = useState(240);
 
   const variables = useMemo(() => extractVariables(currText), [currText]);
@@ -40,6 +41,8 @@ export const TextNode = ({ id, data }) => {
   const handleChange = (e) => {
     const val = e.target.value;
     setCurrText(val);
+    updateNodeField(id, 'text', val);
+    updateNodeField(id, 'variables', extractVariables(val));
 
     // Auto-height: reset then let scrollHeight expand
     const ta = e.target;
@@ -48,7 +51,7 @@ export const TextNode = ({ id, data }) => {
 
     // Auto-width based on actual text measurement
     const textWidth = measureTextWidth(val || ' ', '12.5px Inter, sans-serif');
-    const padded = Math.ceil(textWidth) + 56; // 16px body padding each side + 24px extra
+    const padded = Math.ceil(textWidth) + 56;
     setWidth(Math.min(440, Math.max(240, padded)));
   };
 
@@ -57,7 +60,7 @@ export const TextNode = ({ id, data }) => {
       id={id}
       title="Text"
       icon={TextIcon}
-      
+      accentColor="#0ea5e9"
       handles={[
         { type: 'source', position: 'right', id: 'output', label: 'Output' },
       ]}
@@ -66,7 +69,6 @@ export const TextNode = ({ id, data }) => {
       <div className="base-node-field">
         <label className="base-node-label">Text</label>
         <textarea
-          ref={textareaRef}
           className="text-node-textarea nodrag"
           value={currText}
           onChange={handleChange}

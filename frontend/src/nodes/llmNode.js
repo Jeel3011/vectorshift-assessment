@@ -9,7 +9,7 @@ export const LLMNode = ({ id, data }) => {
       id={id}
       title="LLM"
       icon={LLMIcon}
-      
+      accentColor="#8b5cf6"
       handles={[
         { type: 'target', position: 'left', id: 'system', label: 'System' },
         { type: 'target', position: 'left', id: 'prompt', label: 'Prompt' },

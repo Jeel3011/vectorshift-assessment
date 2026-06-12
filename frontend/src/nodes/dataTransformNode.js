@@ -1,18 +1,23 @@
 // dataTransformNode.js
 import { useState } from 'react';
+import { useStore } from '../store';
 import { BaseNode, SelectField, TextAreaField } from './BaseNode';
 import { DataTransformIcon } from '../icons';
 
 export const DataTransformNode = ({ id, data }) => {
+  const updateNodeField = useStore((s) => s.updateNodeField);
   const [transformType, setTransformType] = useState(data?.transformType || 'to_json');
   const [template, setTemplate] = useState(data?.template || '');
+
+  const setTransformTypeField = (val) => { setTransformType(val); updateNodeField(id, 'transformType', val); };
+  const setTemplateField = (val) => { setTemplate(val); updateNodeField(id, 'template', val); };
 
   return (
     <BaseNode
       id={id}
       title="Data Transform"
       icon={DataTransformIcon}
-      
+      accentColor="#14b8a6"
       handles={[
         { type: 'target', position: 'left', id: 'input', label: 'Data' },
         { type: 'source', position: 'right', id: 'output', label: 'Result' },
@@ -21,7 +26,7 @@ export const DataTransformNode = ({ id, data }) => {
       <SelectField
         label="Transform"
         value={transformType}
-        onChange={setTransformType}
+        onChange={setTransformTypeField}
         options={[
           { value: 'to_json', label: 'To JSON' },
           { value: 'to_text', label: 'To Text' },
@@ -32,7 +37,7 @@ export const DataTransformNode = ({ id, data }) => {
       <TextAreaField
         label="Template"
         value={template}
-        onChange={setTemplate}
+        onChange={setTemplateField}
         placeholder="Optional template..."
         rows={2}
       />

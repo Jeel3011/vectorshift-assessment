@@ -1,2 +1,15 @@
-fastapi
-uvicorn
+# Core
+fastapi==0.128.0
+uvicorn[standard]==0.40.0
+pydantic==2.11.7
+
+# Optional — JWT authentication (install for auth support)
+# python-jose[cryptography]==3.3.0
+
+# Optional — rate limiting (install for production rate limiting)
+# slowapi==0.1.9
+
+# Dev / testing
+httpx==0.28.1
+pytest==9.0.1
+pytest-asyncio==0.26.0

@@ -1,19 +1,13 @@
 // inputNode.js
-
-import { useState } from 'react';
-import { useStore } from '../store';
+import { memo } from 'react';
 import { BaseNode, TextField, SelectField } from './BaseNode';
+import { useNodeField } from '../hooks/useNodeField';
 import { InputIcon } from '../icons';
 
-export const InputNode = ({ id, data }) => {
-  const updateNodeField = useStore((s) => s.updateNodeField);
-  const [currName, setCurrName] = useState(
-    data?.inputName || id.replace('customInput-', 'input_')
-  );
-  const [inputType, setInputType] = useState(data?.inputType || 'Text');
-
-  const setName = (val) => { setCurrName(val); updateNodeField(id, 'inputName', val); };
-  const setType = (val) => { setInputType(val); updateNodeField(id, 'inputType', val); };
+export const InputNode = memo(({ id, data }) => {
+  const defaultName = id.replace('customInput-', 'input_');
+  const [currName, setCurrName] = useNodeField(id, 'inputName', data?.inputName ?? defaultName);
+  const [inputType, setInputType] = useNodeField(id, 'inputType', data?.inputType ?? 'Text');
 
   return (
     <BaseNode
@@ -23,8 +17,10 @@ export const InputNode = ({ id, data }) => {
       accentColor="#22c55e"
       handles={[{ type: 'source', position: 'right', id: 'value', label: 'Value' }]}
     >
-      <TextField label="Name" value={currName} onChange={setName} placeholder="input_name" />
-      <SelectField label="Type" value={inputType} onChange={setType} options={['Text', 'File']} />
+      <TextField label="Name" value={currName} onChange={setCurrName} placeholder="input_name" />
+      <SelectField label="Type" value={inputType} onChange={setInputType} options={['Text', 'File']} />
     </BaseNode>
   );
-};
+});
+
+InputNode.displayName = 'InputNode';

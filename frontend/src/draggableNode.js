@@ -1,18 +1,23 @@
 // draggableNode.js
+// Cursor state is handled entirely via CSS (.draggable-node:active) — no direct
+// DOM style mutation that would bypass React's reconciler and cause cursor flicker.
 
-export const DraggableNode = ({ type, label, icon: IconComponent, accentColor }) => {
-  const onDragStart = (event, nodeType) => {
-    event.target.style.cursor = 'grabbing';
-    event.dataTransfer.setData('application/reactflow', JSON.stringify({ nodeType }));
+import { memo } from 'react';
+
+export const DraggableNode = memo(({ type, label, icon: IconComponent, accentColor }) => {
+  const onDragStart = (event) => {
+    event.dataTransfer.setData('application/reactflow', JSON.stringify({ nodeType: type }));
     event.dataTransfer.effectAllowed = 'move';
   };
 
   return (
     <div
       className="draggable-node"
-      onDragStart={(event) => onDragStart(event, type)}
-      onDragEnd={(event) => (event.target.style.cursor = 'grab')}
+      onDragStart={onDragStart}
       draggable
+      role="button"
+      aria-label={`Add ${label} node`}
+      tabIndex={0}
     >
       {IconComponent && (
         <span className="draggable-node-icon-wrap">
@@ -22,4 +27,6 @@ export const DraggableNode = ({ type, label, icon: IconComponent, accentColor })
       <span className="draggable-node-label">{label}</span>
     </div>
   );
-};
+});
+
+DraggableNode.displayName = 'DraggableNode';

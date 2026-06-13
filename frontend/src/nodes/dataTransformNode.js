@@ -1,16 +1,12 @@
 // dataTransformNode.js
-import { useState } from 'react';
-import { useStore } from '../store';
+import { memo } from 'react';
 import { BaseNode, SelectField, TextAreaField } from './BaseNode';
+import { useNodeField } from '../hooks/useNodeField';
 import { DataTransformIcon } from '../icons';
 
-export const DataTransformNode = ({ id, data }) => {
-  const updateNodeField = useStore((s) => s.updateNodeField);
-  const [transformType, setTransformType] = useState(data?.transformType || 'to_json');
-  const [template, setTemplate] = useState(data?.template || '');
-
-  const setTransformTypeField = (val) => { setTransformType(val); updateNodeField(id, 'transformType', val); };
-  const setTemplateField = (val) => { setTemplate(val); updateNodeField(id, 'template', val); };
+export const DataTransformNode = memo(({ id, data }) => {
+  const [transformType, setTransformType] = useNodeField(id, 'transformType', data?.transformType ?? 'to_json');
+  const [template, setTemplate]           = useNodeField(id, 'template',      data?.template      ?? '');
 
   return (
     <BaseNode
@@ -19,17 +15,17 @@ export const DataTransformNode = ({ id, data }) => {
       icon={DataTransformIcon}
       accentColor="#14b8a6"
       handles={[
-        { type: 'target', position: 'left', id: 'input', label: 'Data' },
+        { type: 'target', position: 'left',  id: 'input',  label: 'Data'   },
         { type: 'source', position: 'right', id: 'output', label: 'Result' },
       ]}
     >
       <SelectField
         label="Transform"
         value={transformType}
-        onChange={setTransformTypeField}
+        onChange={setTransformType}
         options={[
-          { value: 'to_json', label: 'To JSON' },
-          { value: 'to_text', label: 'To Text' },
+          { value: 'to_json',   label: 'To JSON'   },
+          { value: 'to_text',   label: 'To Text'   },
           { value: 'to_number', label: 'To Number' },
           { value: 'to_base64', label: 'To Base64' },
         ]}
@@ -37,10 +33,12 @@ export const DataTransformNode = ({ id, data }) => {
       <TextAreaField
         label="Template"
         value={template}
-        onChange={setTemplateField}
+        onChange={setTemplate}
         placeholder="Optional template..."
         rows={2}
       />
     </BaseNode>
   );
-};
+});
+
+DataTransformNode.displayName = 'DataTransformNode';

@@ -1,19 +1,13 @@
 // outputNode.js
-
-import { useState } from 'react';
-import { useStore } from '../store';
+import { memo } from 'react';
 import { BaseNode, TextField, SelectField } from './BaseNode';
+import { useNodeField } from '../hooks/useNodeField';
 import { OutputIcon } from '../icons';
 
-export const OutputNode = ({ id, data }) => {
-  const updateNodeField = useStore((s) => s.updateNodeField);
-  const [currName, setCurrName] = useState(
-    data?.outputName || id.replace('customOutput-', 'output_')
-  );
-  const [outputType, setOutputType] = useState(data?.outputType || 'Text');
-
-  const setName = (val) => { setCurrName(val); updateNodeField(id, 'outputName', val); };
-  const setType = (val) => { setOutputType(val); updateNodeField(id, 'outputType', val); };
+export const OutputNode = memo(({ id, data }) => {
+  const defaultName = id.replace('customOutput-', 'output_');
+  const [currName, setCurrName] = useNodeField(id, 'outputName', data?.outputName ?? defaultName);
+  const [outputType, setOutputType] = useNodeField(id, 'outputType', data?.outputType ?? 'Text');
 
   return (
     <BaseNode
@@ -23,8 +17,10 @@ export const OutputNode = ({ id, data }) => {
       accentColor="#f59e0b"
       handles={[{ type: 'target', position: 'left', id: 'value', label: 'Value' }]}
     >
-      <TextField label="Name" value={currName} onChange={setName} placeholder="output_name" />
-      <SelectField label="Type" value={outputType} onChange={setType} options={['Text', 'Image']} />
+      <TextField label="Name" value={currName} onChange={setCurrName} placeholder="output_name" />
+      <SelectField label="Type" value={outputType} onChange={setOutputType} options={['Text', 'Image']} />
     </BaseNode>
   );
-};
+});
+
+OutputNode.displayName = 'OutputNode';

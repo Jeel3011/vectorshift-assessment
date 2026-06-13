@@ -1,5 +1,5 @@
 // ui.js
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, Component } from 'react';
 import ReactFlow, { Controls, Background, MiniMap, MarkerType } from 'reactflow';
 import { useStore } from './store';
 import { useShallow } from 'zustand/react/shallow';
@@ -22,6 +22,7 @@ import 'reactflow/dist/style.css';
 const gridSize = 20;
 const proOptions = { hideAttribution: true };
 
+// Declared at module scope — never changes, so ReactFlow never remounts nodes
 const nodeTypes = {
   customInput: InputNode,
   llm: LLMNode,
@@ -37,8 +38,49 @@ const nodeTypes = {
   chat: ChatNode,
 };
 
+// Prevent self-loops at the connection UI level
+const isValidConnection = (connection) => connection.source !== connection.target;
+
+// ── Error Boundary ─────────────────────────────────────────────────────────
+// Catches render errors in any node component; shows a recoverable fallback
+// instead of a blank white screen.
+
+class CanvasErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    // Replace with Sentry.captureException(error, { extra: info }) in production
+    console.error('[CanvasErrorBoundary]', error, info);
+  }
+
+  handleReset = () => this.setState({ hasError: false, error: null });
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="canvas-error-state">
+          <div className="canvas-error-icon">⚠</div>
+          <div className="canvas-error-title">The canvas encountered an error</div>
+          <div className="canvas-error-sub">
+            {this.state.error?.message ?? 'An unexpected error occurred.'}
+          </div>
+          <button className="canvas-error-btn" onClick={this.handleReset}>
+            Reload canvas
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ── Selector — stable reference via useShallow ─────────────────────────────
 const selector = (state) => ({
-  nodes: state.nodes,
+  nodesMap: state.nodesMap,
   edges: state.edges,
   getNodeID: state.getNodeID,
   addNode: state.addNode,
@@ -47,38 +89,45 @@ const selector = (state) => ({
   onConnect: state.onConnect,
 });
 
-// Prevent self-loops at the UI level (belt-and-suspenders on top of store guard)
-const isValidConnection = (connection) => connection.source !== connection.target;
-
 export const PipelineUI = () => {
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+
   const {
-    nodes, edges, getNodeID, addNode,
+    nodesMap, edges, getNodeID, addNode,
     onNodesChange, onEdgesChange, onConnect,
   } = useStore(useShallow(selector));
 
-  const getInitNodeData = (nodeID, type) => ({ id: nodeID, nodeType: `${type}` });
+  // Derive flat nodes array for ReactFlow — stable as long as nodesMap ref is stable
+  const nodes = Object.values(nodesMap);
 
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      if (!event?.dataTransfer?.getData('application/reactflow')) return;
+      const raw = event?.dataTransfer?.getData('application/reactflow');
+      if (!raw) return;
 
-      const appData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+      let appData;
+      try {
+        appData = JSON.parse(raw);
+      } catch {
+        return;
+      }
       const type = appData?.nodeType;
-      if (!type) return;
+      if (!type || !nodeTypes[type]) return; // reject unknown node types
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.screenToFlowPosition
+      const position = reactFlowInstance?.screenToFlowPosition
         ? reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY })
-        : reactFlowInstance.project({
-            x: event.clientX - reactFlowBounds.left,
-            y: event.clientY - reactFlowBounds.top,
-          });
+        : (() => {
+            const bounds = reactFlowWrapper.current?.getBoundingClientRect() ?? { left: 0, top: 0 };
+            return reactFlowInstance?.project({
+              x: event.clientX - bounds.left,
+              y: event.clientY - bounds.top,
+            }) ?? { x: event.clientX, y: event.clientY };
+          })();
 
       const nodeID = getNodeID(type);
-      addNode({ id: nodeID, type, position, data: getInitNodeData(nodeID, type) });
+      addNode({ id: nodeID, type, position, data: { id: nodeID, nodeType: type } });
     },
     [reactFlowInstance, addNode, getNodeID]
   );
@@ -90,39 +139,41 @@ export const PipelineUI = () => {
 
   return (
     <div ref={reactFlowWrapper} className="reactflow-wrapper">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onInit={setReactFlowInstance}
-        nodeTypes={nodeTypes}
-        proOptions={proOptions}
-        snapGrid={[gridSize, gridSize]}
-        snapToGrid
-        connectionLineType="smoothstep"
-        isValidConnection={isValidConnection}
-        deleteKeyCode={['Backspace', 'Delete']}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-          markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#94a3b8' },
-          style: { stroke: '#94a3b8', strokeWidth: 2 },
-        }}
-      >
-        <Background color="#e4e4e7" gap={gridSize} size={1} variant="dots" />
-        <Controls showInteractive={false} />
-        <MiniMap
-          nodeStrokeColor="#e4e4e7"
-          nodeColor="#ffffff"
-          nodeBorderRadius={8}
-          maskColor="rgba(250,250,250,0.85)"
-        />
-      </ReactFlow>
+      <CanvasErrorBoundary>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onInit={setReactFlowInstance}
+          nodeTypes={nodeTypes}
+          proOptions={proOptions}
+          snapGrid={[gridSize, gridSize]}
+          snapToGrid
+          connectionLineType="smoothstep"
+          isValidConnection={isValidConnection}
+          deleteKeyCode={['Backspace', 'Delete']}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          defaultEdgeOptions={{
+            type: 'smoothstep',
+            markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#94a3b8' },
+            style: { stroke: '#94a3b8', strokeWidth: 2 },
+          }}
+        >
+          <Background color="#e4e4e7" gap={gridSize} size={1} variant="dots" />
+          <Controls showInteractive={false} />
+          <MiniMap
+            nodeStrokeColor="#e4e4e7"
+            nodeColor="#ffffff"
+            nodeBorderRadius={8}
+            maskColor="rgba(250,250,250,0.85)"
+          />
+        </ReactFlow>
+      </CanvasErrorBoundary>
 
       {nodes.length === 0 && (
         <div className="empty-state-hint">

@@ -3,17 +3,22 @@ import { useState } from 'react';
 import { useStore } from './store';
 import { useShallow } from 'zustand/react/shallow';
 
+const API_BASE = process.env.REACT_APP_API_URL ?? 'http://localhost:8001';
+const TIMEOUT_MS = 15_000;
+
 const selector = (state) => ({
-  nodes: state.nodes,
-  edges: state.edges,
+  nodesMap:   state.nodesMap,
+  edges:      state.edges,
   clearCanvas: state.clearCanvas,
 });
 
 export const SubmitButton = () => {
-  const { nodes, edges, clearCanvas } = useStore(useShallow(selector));
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const { nodesMap, edges, clearCanvas } = useStore(useShallow(selector));
+  const nodes = Object.values(nodesMap);
+
+  const [loading, setLoading]               = useState(false);
+  const [result, setResult]                 = useState(null);
+  const [error, setError]                   = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleSubmit = async () => {
@@ -21,11 +26,15 @@ export const SubmitButton = () => {
     setError(null);
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     try {
-      const response = await fetch('http://localhost:8000/pipelines/parse', {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/pipelines/parse`, {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodes, edges }),
+        body:    JSON.stringify({ nodes, edges }),
+        signal:  controller.signal,
       });
 
       if (!response.ok) throw new Error(`Server responded with ${response.status}`);
@@ -33,8 +42,13 @@ export const SubmitButton = () => {
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      setError(err.message);
+      if (err.name === 'AbortError') {
+        setError(`Request timed out after ${TIMEOUT_MS / 1000} s — is the backend running?`);
+      } else {
+        setError(err.message);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -69,7 +83,6 @@ export const SubmitButton = () => {
         </div>
 
         <div className="submit-actions">
-          {/* Clear button */}
           {nodes.length > 0 && (
             <button
               className="clear-btn"
@@ -87,7 +100,6 @@ export const SubmitButton = () => {
             </button>
           )}
 
-          {/* Submit button */}
           <button
             className="submit-btn"
             type="button"
@@ -102,12 +114,10 @@ export const SubmitButton = () => {
 
       {/* Error toast */}
       {error && (
-        <div className="error-toast" onClick={closeModal}>
+        <div className="error-toast" role="alert" onClick={closeModal}>
           <span className="error-toast-icon">⚠</span>
-          <span className="error-toast-msg">
-            Backend unreachable — make sure <code>uvicorn main:app --reload</code> is running
-          </span>
-          <button className="error-toast-close" onClick={closeModal}>✕</button>
+          <span className="error-toast-msg">{error}</span>
+          <button className="error-toast-close" onClick={closeModal} aria-label="Dismiss">✕</button>
         </div>
       )}
 
@@ -160,7 +170,7 @@ export const SubmitButton = () => {
             {!result.is_dag && (
               <div className="modal-warning">
                 <span className="modal-warning-icon">⚠</span>
-                This pipeline contains a cycle. Execution engines typically require a DAG — remove the back-edge to fix it.
+                This pipeline contains a cycle. Execution engines require a DAG — remove the back-edge to fix it.
               </div>
             )}
 

@@ -1,16 +1,38 @@
 // BaseNode.js
 // Core abstraction for all pipeline nodes.
+// - Handle position computation pre-calculated (no O(N²) filter+indexOf per handle)
+// - All field components memoized
+// - NumberField NaN-guarded
 
+import { memo, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
 
 const positionMap = {
-  left: Position.Left,
-  right: Position.Right,
-  top: Position.Top,
+  left:   Position.Left,
+  right:  Position.Right,
+  top:    Position.Top,
   bottom: Position.Bottom,
 };
 
-export const BaseNode = ({
+// Pre-compute each handle's top% before render, so the map body is O(1) per handle.
+const computeHandlePositions = (handles) => {
+  // Group by (type, position) — once, outside the render loop
+  const groups = {};
+  for (const h of handles) {
+    const key = `${h.type}:${h.position}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(h);
+  }
+  return handles.map((h) => {
+    const key = `${h.type}:${h.position}`;
+    const group = groups[key];
+    const index = group.indexOf(h);
+    const total = group.length;
+    return total > 1 ? ((index + 1) * 100) / (total + 1) : 50;
+  });
+};
+
+export const BaseNode = memo(({
   id,
   title,
   icon: IconComponent,
@@ -22,14 +44,15 @@ export const BaseNode = ({
   minWidth = 240,
   minHeight,
 }) => {
-  const leftHandles = handles.filter(h => h.position === 'left');
-  const rightHandles = handles.filter(h => h.position === 'right');
+  const leftHandles  = useMemo(() => handles.filter((h) => h.position === 'left'),  [handles]);
+  const rightHandles = useMemo(() => handles.filter((h) => h.position === 'right'), [handles]);
+  const topPercents  = useMemo(() => computeHandlePositions(handles), [handles]);
 
   return (
     <div
       className={`base-node ${className}`}
       style={{
-        minWidth: `${minWidth}px`,
+        minWidth:  `${minWidth}px`,
         minHeight: minHeight ? `${minHeight}px` : undefined,
         ...style,
       }}
@@ -46,7 +69,7 @@ export const BaseNode = ({
       {(leftHandles.length > 0 || rightHandles.length > 0) && (
         <div className="handle-labels-row">
           <div className="handle-labels-left">
-            {leftHandles.map(h => (
+            {leftHandles.map((h) => (
               <span key={h.id} className="handle-tag handle-tag-in">
                 <span className="handle-tag-dot" style={{ background: accentColor }} />
                 {h.label || h.id}
@@ -54,7 +77,7 @@ export const BaseNode = ({
             ))}
           </div>
           <div className="handle-labels-right">
-            {rightHandles.map(h => (
+            {rightHandles.map((h) => (
               <span key={h.id} className="handle-tag handle-tag-out">
                 {h.label || h.id}
                 <span className="handle-tag-dot" style={{ background: accentColor }} />
@@ -64,39 +87,29 @@ export const BaseNode = ({
         </div>
       )}
 
-      {/* Body — wrapped in nodrag/nowheel to prevent ReactFlow from capturing events */}
+      {/* Body */}
       {children && <div className="base-node-body nodrag">{children}</div>}
 
-      {/* Handles */}
-      {handles.map((handle, idx) => {
-        const sameSide = handles.filter(
-          (h) => h.type === handle.type && h.position === handle.position
-        );
-        const total = sameSide.length;
-        const index = sameSide.indexOf(handle);
-        const topPercent = total > 1
-          ? ((index + 1) * 100) / (total + 1)
-          : 50;
-
-        return (
-          <Handle
-            key={handle.id || `${handle.type}-${idx}`}
-            type={handle.type}
-            position={positionMap[handle.position] || Position.Left}
-            id={`${id}-${handle.id || idx}`}
-            className={`base-node-handle ${handle.type === 'source' ? 'handle-source' : 'handle-target'}`}
-            style={{ top: `${topPercent}%`, ...(handle.style || {}) }}
-          />
-        );
-      })}
+      {/* Handles — topPercent pre-computed above (O(N) total, not O(N²)) */}
+      {handles.map((handle, idx) => (
+        <Handle
+          key={handle.id || `${handle.type}-${idx}`}
+          type={handle.type}
+          position={positionMap[handle.position] || Position.Left}
+          id={`${id}-${handle.id || idx}`}
+          className={`base-node-handle ${handle.type === 'source' ? 'handle-source' : 'handle-target'}`}
+          style={{ top: `${topPercents[idx]}%`, ...(handle.style || {}) }}
+        />
+      ))}
     </div>
   );
-};
+});
 
-// ─── Reusable Field Components ────────────────────────────
-// All inputs have className "nodrag" so ReactFlow won't intercept clicks/drags on them
+BaseNode.displayName = 'BaseNode';
 
-export const TextField = ({ label, value, onChange, placeholder = '' }) => (
+// ─── Reusable Field Components ────────────────────────────────────────────────
+
+export const TextField = memo(({ label, value, onChange, placeholder = '' }) => (
   <div className="base-node-field">
     <label className="base-node-label">{label}</label>
     <input
@@ -107,9 +120,10 @@ export const TextField = ({ label, value, onChange, placeholder = '' }) => (
       placeholder={placeholder}
     />
   </div>
-);
+));
+TextField.displayName = 'TextField';
 
-export const SelectField = ({ label, value, onChange, options = [] }) => (
+export const SelectField = memo(({ label, value, onChange, options = [] }) => (
   <div className="base-node-field">
     <label className="base-node-label">{label}</label>
     <select
@@ -118,30 +132,35 @@ export const SelectField = ({ label, value, onChange, options = [] }) => (
       onChange={(e) => onChange(e.target.value)}
     >
       {options.map((opt) => {
-        const val = typeof opt === 'string' ? opt : opt.value;
+        const val     = typeof opt === 'string' ? opt : opt.value;
         const display = typeof opt === 'string' ? opt : opt.label;
         return <option key={val} value={val}>{display}</option>;
       })}
     </select>
   </div>
-);
+));
+SelectField.displayName = 'SelectField';
 
-export const NumberField = ({ label, value, onChange, min, max, step = 1 }) => (
+export const NumberField = memo(({ label, value, onChange, min, max, step = 1 }) => (
   <div className="base-node-field">
     <label className="base-node-label">{label}</label>
     <input
       className="base-node-input nodrag"
       type="number"
       value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
+      onChange={(e) => {
+        const n = Number(e.target.value);
+        onChange(Number.isFinite(n) ? n : 0); // NaN guard
+      }}
       min={min}
       max={max}
       step={step}
     />
   </div>
-);
+));
+NumberField.displayName = 'NumberField';
 
-export const TextAreaField = ({ label, value, onChange, placeholder = '', rows = 3 }) => (
+export const TextAreaField = memo(({ label, value, onChange, placeholder = '', rows = 3 }) => (
   <div className="base-node-field">
     <label className="base-node-label">{label}</label>
     <textarea
@@ -152,9 +171,10 @@ export const TextAreaField = ({ label, value, onChange, placeholder = '', rows =
       rows={rows}
     />
   </div>
-);
+));
+TextAreaField.displayName = 'TextAreaField';
 
-export const RangeField = ({ label, value, onChange, min = 0, max = 1, step = 0.05 }) => (
+export const RangeField = memo(({ label, value, onChange, min = 0, max = 1, step = 0.05 }) => (
   <div className="base-node-field">
     <label className="base-node-label">
       {label}: <span className="base-node-range-value">{value}</span>
@@ -169,4 +189,5 @@ export const RangeField = ({ label, value, onChange, min = 0, max = 1, step = 0.
       step={step}
     />
   </div>
-);
+));
+RangeField.displayName = 'RangeField';

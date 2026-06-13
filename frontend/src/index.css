@@ -1,3 +1,4 @@
+/* Fonts loaded via <link rel="preconnect"> in index.html — no render-blocking @import */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,8 +60,8 @@ body { background: var(--canvas); color: var(--ink-1); font-family: var(--sans);
 .pipeline-toolbar {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
-  padding: 0 24px;
-  height: 56px;
+  padding: 12px 24px;
+  height: auto;
   flex-shrink: 0;
   z-index: 10;
   display: flex;
@@ -68,9 +69,6 @@ body { background: var(--canvas); color: var(--ink-1); font-family: var(--sans);
   justify-content: center;
   gap: 10px;
 }
-
-/* Taller toolbar when wrapping */
-.pipeline-toolbar { height: auto; padding: 12px 24px; }
 
 .toolbar-header {
   display: flex;
@@ -885,3 +883,36 @@ body { background: var(--canvas); color: var(--ink-1); font-family: var(--sans);
 /* ── UTILITY ────────────────────────────────────────────── */
 code { font-family: var(--mono); }
 .react-flow__node:focus .base-node { outline: none; }
+
+/* Cursor via CSS — no JS DOM mutation needed */
+.draggable-node         { cursor: grab; }
+.draggable-node:active  { cursor: grabbing; }
+
+/* ── CANVAS ERROR BOUNDARY ──────────────────────────────── */
+.canvas-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 40px;
+}
+.canvas-error-icon  { font-size: 28px; }
+.canvas-error-title { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.canvas-error-sub   { font-size: 12px; color: var(--ink-4); max-width: 360px; line-height: 1.6; }
+.canvas-error-btn {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-1);
+  background: var(--surface-2);
+  border: 1px solid var(--line-dk);
+  border-radius: var(--r-sm);
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background var(--t);
+}
+.canvas-error-btn:hover { background: var(--ink-1); color: #fff; }

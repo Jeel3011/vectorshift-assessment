@@ -1,24 +1,28 @@
 // noteNode.js
-import { useState } from 'react';
-import { useStore } from '../store';
+import { memo } from 'react';
 import { BaseNode } from './BaseNode';
+import { useNodeField } from '../hooks/useNodeField';
 import { NoteIcon } from '../icons';
 
 const NOTE_COLORS = {
-  cream: { bg: '#FBF9F4', border: '#D9D3C5' },
+  cream:     { bg: '#FBF9F4', border: '#D9D3C5' },
   'blue-gray': { bg: '#F0F3F7', border: '#C5CDD9' },
-  sage: { bg: '#F0F5F1', border: '#C2D4C5' },
-  rose: { bg: '#F7F0F0', border: '#D9C5C5' },
+  sage:      { bg: '#F0F5F1', border: '#C2D4C5' },
+  rose:      { bg: '#F7F0F0', border: '#D9C5C5' },
 };
 
-export const NoteNode = ({ id, data }) => {
-  const updateNodeField = useStore((s) => s.updateNodeField);
-  const [content, setContent] = useState(data?.content || 'Add a note...');
-  const [color, setColor] = useState(data?.color || 'cream');
-  const colorConfig = NOTE_COLORS[color] || NOTE_COLORS.cream;
+const NOTE_MAX_LENGTH = 2000;
 
-  const setContentField = (val) => { setContent(val); updateNodeField(id, 'content', val); };
-  const setColorField = (val) => { setColor(val); updateNodeField(id, 'color', val); };
+export const NoteNode = memo(({ id, data }) => {
+  const [content, setContent] = useNodeField(id, 'content', data?.content ?? 'Add a note...');
+  const [color,   setColor]   = useNodeField(id, 'color',   data?.color   ?? 'cream');
+
+  const colorConfig = NOTE_COLORS[color] ?? NOTE_COLORS.cream;
+
+  const handleContentChange = (e) => {
+    const val = e.target.value.slice(0, NOTE_MAX_LENGTH);
+    setContent(val);
+  };
 
   return (
     <BaseNode
@@ -34,9 +38,10 @@ export const NoteNode = ({ id, data }) => {
         <textarea
           className="base-node-textarea nodrag"
           value={content}
-          onChange={(e) => setContentField(e.target.value)}
+          onChange={handleContentChange}
           placeholder="Write a note..."
           rows={3}
+          maxLength={NOTE_MAX_LENGTH}
           style={{ background: 'transparent' }}
         />
       </div>
@@ -46,11 +51,13 @@ export const NoteNode = ({ id, data }) => {
             key={key}
             className={`note-node-color-btn ${color === key ? 'active' : ''}`}
             style={{ background: val.bg, borderColor: color === key ? '#0F131A' : val.border }}
-            onClick={() => setColorField(key)}
+            onClick={() => setColor(key)}
             title={key}
           />
         ))}
       </div>
     </BaseNode>
   );
-};
+});
+
+NoteNode.displayName = 'NoteNode';

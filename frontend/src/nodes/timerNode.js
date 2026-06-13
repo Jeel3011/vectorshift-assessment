@@ -1,18 +1,18 @@
 // timerNode.js
-// Delay/timer node — demonstrates NumberField and SelectField
-
-import { useState } from 'react';
-import { useStore } from '../store';
+import { memo } from 'react';
 import { BaseNode, NumberField, SelectField } from './BaseNode';
+import { useNodeField } from '../hooks/useNodeField';
 import { TimerIcon } from '../icons';
 
-export const TimerNode = ({ id, data }) => {
-  const updateNodeField = useStore((s) => s.updateNodeField);
-  const [delay, setDelay] = useState(data?.delay || 1000);
-  const [unit, setUnit] = useState(data?.unit || 'ms');
+export const TimerNode = memo(({ id, data }) => {
+  const [delay, setDelay] = useNodeField(id, 'delay', data?.delay ?? 1000);
+  const [unit,  setUnit]  = useNodeField(id, 'unit',  data?.unit  ?? 'ms');
 
-  const setDelayField = (val) => { setDelay(val); updateNodeField(id, 'delay', val); };
-  const setUnitField = (val) => { setUnit(val); updateNodeField(id, 'unit', val); };
+  // Guard: ensure delay is always a finite number, never NaN
+  const handleDelayChange = (val) => {
+    const n = Number(val);
+    setDelay(Number.isFinite(n) ? n : 0);
+  };
 
   return (
     <BaseNode
@@ -21,21 +21,23 @@ export const TimerNode = ({ id, data }) => {
       icon={TimerIcon}
       accentColor="#a855f7"
       handles={[
-        { type: 'target', position: 'left', id: 'trigger', label: 'Trigger' },
-        { type: 'source', position: 'right', id: 'done', label: 'Done' },
+        { type: 'target', position: 'left',  id: 'trigger', label: 'Trigger' },
+        { type: 'source', position: 'right', id: 'done',    label: 'Done'    },
       ]}
     >
-      <NumberField label="Delay" value={delay} onChange={setDelayField} min={0} max={60000} step={100} />
+      <NumberField label="Delay" value={delay} onChange={handleDelayChange} min={0} max={60000} step={100} />
       <SelectField
         label="Unit"
         value={unit}
-        onChange={setUnitField}
+        onChange={setUnit}
         options={[
           { value: 'ms', label: 'Milliseconds' },
-          { value: 's', label: 'Seconds' },
-          { value: 'm', label: 'Minutes' },
+          { value: 's',  label: 'Seconds'      },
+          { value: 'm',  label: 'Minutes'      },
         ]}
       />
     </BaseNode>
   );
-};
+});
+
+TimerNode.displayName = 'TimerNode';

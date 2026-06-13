@@ -63,10 +63,20 @@ _MAX_EDGES   = int(os.environ.get("MAX_EDGES",   "2000"))
 _MAX_ID_LEN  = int(os.environ.get("MAX_ID_LEN",  "128"))
 _JWT_SECRET  = os.environ.get("JWT_SECRET",  "dev-secret-change-in-production")
 _JWT_ALG     = os.environ.get("JWT_ALGORITHM", "HS256")
-_ALLOWED_ORIGINS = os.environ.get(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:3001,http://localhost:3002",
-).split(",")
+# Explicit allow-list (comma-separated) for local dev. Empty entries are dropped.
+_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:3100").split(",")
+    if o.strip()
+]
+
+# Regex allow-list so EVERY Vercel deployment URL (preview + production aliases)
+# is accepted without re-pinning a single hostname on each deploy. This is what
+# prevents the "new deploy link fails CORS" problem. Override via env if needed.
+_ALLOWED_ORIGIN_REGEX = os.environ.get(
+    "ALLOWED_ORIGIN_REGEX",
+    r"https://.*\.vercel\.app",
+)
 
 # Thread pool for off-loop CPU-bound DAG work
 _executor = ThreadPoolExecutor(max_workers=max(4, (os.cpu_count() or 2) * 2))
@@ -237,7 +247,8 @@ if _SLOWAPI_AVAILABLE:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_ALLOWED_ORIGINS,
+    allow_origins=_ALLOWED_ORIGINS,            # explicit local-dev origins
+    allow_origin_regex=_ALLOWED_ORIGIN_REGEX,  # any *.vercel.app deploy URL
     allow_credentials=False,  # no cookies/auth headers used; False lets preflight work on all browsers
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization", "X-Request-ID"],

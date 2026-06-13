@@ -1,4 +1,3 @@
-// ui.js
 import { useState, useRef, useCallback, Component } from 'react';
 import ReactFlow, { Controls, Background, MiniMap, MarkerType } from 'reactflow';
 import { useStore } from './store';

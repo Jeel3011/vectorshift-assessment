@@ -1,13 +1,3 @@
-// store.js
-// Normalized Zustand store with localStorage persistence.
-//
-// Key improvements over the original:
-//   - nodesMap (id → node) for O(1) updateNodeField instead of O(N) array scan
-//   - Atomic getNodeID via producer-function set() — no race condition
-//   - Duplicate-edge guard on onConnect
-//   - localStorage persistence via zustand/middleware persist
-//   - Derived `nodes` / `edges` arrays for ReactFlow compatibility
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import {
@@ -16,13 +6,10 @@ import {
   applyEdgeChanges,
 } from "reactflow";
 
-// ReactFlow still wants flat arrays; derive them from the map on every selector read.
-// The map is the source of truth — the flat arrays are NOT stored separately.
-
 const initialState = {
-  nodesMap: {},   // { [id: string]: ReactFlowNode }
+  nodesMap: {},
   edges: [],
-  nodeIDs: {},    // { [type: string]: number }  — monotonic counters per type
+  nodeIDs: {},
 };
 
 export const useStore = create(

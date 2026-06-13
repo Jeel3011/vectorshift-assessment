@@ -1,4 +1,3 @@
-// chatNode.js
 import { memo } from 'react';
 import { BaseNode, TextField, SelectField, TextAreaField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

@@ -21,7 +21,6 @@ import 'reactflow/dist/style.css';
 const gridSize = 20;
 const proOptions = { hideAttribution: true };
 
-// Declared at module scope — never changes, so ReactFlow never remounts nodes
 const nodeTypes = {
   customInput: InputNode,
   llm: LLMNode,
@@ -37,12 +36,7 @@ const nodeTypes = {
   chat: ChatNode,
 };
 
-// Prevent self-loops at the connection UI level
 const isValidConnection = (connection) => connection.source !== connection.target;
-
-// ── Error Boundary ─────────────────────────────────────────────────────────
-// Catches render errors in any node component; shows a recoverable fallback
-// instead of a blank white screen.
 
 class CanvasErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -52,7 +46,6 @@ class CanvasErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    // Replace with Sentry.captureException(error, { extra: info }) in production
     console.error('[CanvasErrorBoundary]', error, info);
   }
 
@@ -77,7 +70,6 @@ class CanvasErrorBoundary extends Component {
   }
 }
 
-// ── Selector — stable reference via useShallow ─────────────────────────────
 const selector = (state) => ({
   nodesMap: state.nodesMap,
   edges: state.edges,
@@ -97,7 +89,6 @@ export const PipelineUI = () => {
     onNodesChange, onEdgesChange, onConnect,
   } = useStore(useShallow(selector));
 
-  // Derive flat nodes array for ReactFlow — stable as long as nodesMap ref is stable
   const nodes = Object.values(nodesMap);
 
   const onDrop = useCallback(
@@ -113,7 +104,7 @@ export const PipelineUI = () => {
         return;
       }
       const type = appData?.nodeType;
-      if (!type || !nodeTypes[type]) return; // reject unknown node types
+      if (!type || !nodeTypes[type]) return;
 
       const position = reactFlowInstance?.screenToFlowPosition
         ? reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY })

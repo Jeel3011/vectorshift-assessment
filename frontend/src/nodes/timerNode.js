@@ -1,4 +1,3 @@
-// timerNode.js
 import { memo } from 'react';
 import { BaseNode, NumberField, SelectField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';
@@ -8,7 +7,6 @@ export const TimerNode = memo(({ id, data }) => {
   const [delay, setDelay] = useNodeField(id, 'delay', data?.delay ?? 1000);
   const [unit,  setUnit]  = useNodeField(id, 'unit',  data?.unit  ?? 'ms');
 
-  // Guard: ensure delay is always a finite number, never NaN
   const handleDelayChange = (val) => {
     const n = Number(val);
     setDelay(Number.isFinite(n) ? n : 0);

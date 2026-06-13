@@ -1,7 +1,3 @@
-// draggableNode.js
-// Cursor state is handled entirely via CSS (.draggable-node:active) — no direct
-// DOM style mutation that would bypass React's reconciler and cause cursor flicker.
-
 import { memo } from 'react';
 
 export const DraggableNode = memo(({ type, label, icon: IconComponent, accentColor }) => {

@@ -1,4 +1,3 @@
-// llmNode.js
 import { memo } from 'react';
 import { BaseNode, SelectField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

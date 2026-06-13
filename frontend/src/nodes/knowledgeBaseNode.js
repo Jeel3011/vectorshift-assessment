@@ -1,4 +1,3 @@
-// knowledgeBaseNode.js
 import { memo } from 'react';
 import { BaseNode, TextField, NumberField, RangeField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

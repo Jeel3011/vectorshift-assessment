@@ -1,7 +1,3 @@
-// icons.js
-// Clean monochrome SVG icons for each node type.
-// All icons are 16x16, stroke-based, matching VectorShift's editorial style.
-
 const Icon = ({ children, size = 16, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +113,6 @@ export const ChatIcon = (props) => (
   </Icon>
 );
 
-// Icon map for easy access by node type
 export const nodeIcons = {
   customInput: InputIcon,
   customOutput: OutputIcon,

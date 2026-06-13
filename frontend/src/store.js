@@ -17,13 +17,10 @@ export const useStore = create(
     (set, get) => ({
       ...initialState,
 
-      // ── Derived selector helpers ──────────────────────────────────────────
-      // Call get().nodes anywhere you need the flat array ReactFlow expects.
       get nodes() {
         return Object.values(get().nodesMap);
       },
 
-      // ── Atomic ID generation (no race condition under concurrent drops) ───
       getNodeID: (type) => {
         let newID;
         set((state) => {
@@ -34,14 +31,12 @@ export const useStore = create(
         return newID;
       },
 
-      // ── Node CRUD ─────────────────────────────────────────────────────────
       addNode: (node) => {
         set((state) => ({
           nodesMap: { ...state.nodesMap, [node.id]: node },
         }));
       },
 
-      // O(1) field update — no full-array scan
       updateNodeField: (nodeId, fieldName, fieldValue) => {
         set((state) => {
           const existing = state.nodesMap[nodeId];
@@ -58,7 +53,6 @@ export const useStore = create(
         });
       },
 
-      // ── ReactFlow change handlers ─────────────────────────────────────────
       onNodesChange: (changes) => {
         set((state) => {
           const flatNodes = applyNodeChanges(changes, Object.values(state.nodesMap));
@@ -73,7 +67,6 @@ export const useStore = create(
       },
 
       onConnect: (connection) => {
-        // Belt-and-suspenders: reject self-loops and duplicate connections
         if (connection.source === connection.target) return;
         set((state) => {
           const isDuplicate = state.edges.some(
@@ -88,7 +81,6 @@ export const useStore = create(
         });
       },
 
-      // ── Canvas ops ────────────────────────────────────────────────────────
       clearCanvas: () => {
         set({ nodesMap: {}, edges: [], nodeIDs: {} });
       },
@@ -96,7 +88,6 @@ export const useStore = create(
     {
       name: "pipeline-store-v1",
       storage: createJSONStorage(() => localStorage),
-      // Only persist the data, not the action functions
       partialize: (state) => ({
         nodesMap: state.nodesMap,
         edges: state.edges,

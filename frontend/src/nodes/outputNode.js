@@ -1,4 +1,3 @@
-// outputNode.js
 import { memo } from 'react';
 import { BaseNode, TextField, SelectField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

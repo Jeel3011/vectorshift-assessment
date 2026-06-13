@@ -1,4 +1,3 @@
-// noteNode.js
 import { memo } from 'react';
 import { BaseNode } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

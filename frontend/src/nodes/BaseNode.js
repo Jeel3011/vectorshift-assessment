@@ -1,9 +1,3 @@
-// BaseNode.js
-// Core abstraction for all pipeline nodes.
-// - Handle position computation pre-calculated (no O(N²) filter+indexOf per handle)
-// - All field components memoized
-// - NumberField NaN-guarded
-
 import { memo, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
 
@@ -14,9 +8,7 @@ const positionMap = {
   bottom: Position.Bottom,
 };
 
-// Pre-compute each handle's top% before render, so the map body is O(1) per handle.
 const computeHandlePositions = (handles) => {
-  // Group by (type, position) — once, outside the render loop
   const groups = {};
   for (const h of handles) {
     const key = `${h.type}:${h.position}`;
@@ -90,7 +82,6 @@ export const BaseNode = memo(({
       {/* Body */}
       {children && <div className="base-node-body nodrag">{children}</div>}
 
-      {/* Handles — topPercent pre-computed above (O(N) total, not O(N²)) */}
       {handles.map((handle, idx) => (
         <Handle
           key={handle.id || `${handle.type}-${idx}`}
@@ -106,8 +97,6 @@ export const BaseNode = memo(({
 });
 
 BaseNode.displayName = 'BaseNode';
-
-// ─── Reusable Field Components ────────────────────────────────────────────────
 
 export const TextField = memo(({ label, value, onChange, placeholder = '' }) => (
   <div className="base-node-field">
@@ -150,7 +139,7 @@ export const NumberField = memo(({ label, value, onChange, min, max, step = 1 })
       value={value}
       onChange={(e) => {
         const n = Number(e.target.value);
-        onChange(Number.isFinite(n) ? n : 0); // NaN guard
+        onChange(Number.isFinite(n) ? n : 0);
       }}
       min={min}
       max={max}

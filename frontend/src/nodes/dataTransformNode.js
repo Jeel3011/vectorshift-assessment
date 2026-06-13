@@ -1,4 +1,3 @@
-// dataTransformNode.js
 import { memo } from 'react';
 import { BaseNode, SelectField, TextAreaField } from './BaseNode';
 import { useNodeField } from '../hooks/useNodeField';

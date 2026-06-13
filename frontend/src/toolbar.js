@@ -1,5 +1,3 @@
-// toolbar.js
-
 import { DraggableNode } from './draggableNode';
 import {
   InputIcon, OutputIcon, TextIcon, LLMIcon,
@@ -7,7 +5,6 @@ import {
   DataTransformIcon, NoteIcon, ApiIcon, TimerIcon, ChatIcon,
 } from './icons';
 
-// accent color per node type — must match the node file accentColor
 const NODE_GROUPS = [
   {
     label: 'General',

@@ -4,7 +4,7 @@ import { useStore } from './store';
 import { useShallow } from 'zustand/react/shallow';
 
 const API_BASE = process.env.REACT_APP_API_URL ?? 'http://localhost:8001';
-const TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 30_000; // 30s — accounts for Vercel serverless cold starts
 
 const selector = (state) => ({
   nodesMap:   state.nodesMap,

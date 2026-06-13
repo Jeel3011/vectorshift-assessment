@@ -238,7 +238,7 @@ if _SLOWAPI_AVAILABLE:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=False,  # no cookies/auth headers used; False lets preflight work on all browsers
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
     expose_headers=["X-Request-ID"],
